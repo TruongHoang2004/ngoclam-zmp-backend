@@ -7,10 +7,19 @@ type Category struct {
 	ID          uint
 	Name        string
 	Description string
+	Image       Image
 
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	// Products reference is optional in the domain model depending on your needs
+}
+
+type CategoryRepository interface {
+	Create(category *Category) (*Category, error)
+	FindByID(id uint) (*Category, error)
+	FindAll() ([]*Category, error)
+	Update(category *Category) error
+	Delete(id uint) error
 }
 
 // NewCategory creates a new category instance

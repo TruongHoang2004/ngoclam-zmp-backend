@@ -1,12 +1,56 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"github.com/TruongHoang2004/ngoclam-zmp-backend/internal/domain/entity"
+	"gorm.io/gorm"
+)
 
 type Category struct {
-	ID          uint      `json:"id" gorm:"primaryKey"`
-	Name        string    `json:"name" gorm:"not null;size:100"`
-	Description string    `json:"description" gorm:"size:255"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
-	Products    []Product `json:"products,omitempty" gorm:"foreignKey:CategoryID"`
+	ID          uint   `gorm:"primaryKey;autoIncrement"`
+	Name        string `gorm:"type:varchar(100);not null"`
+	Description string `gorm:"type:text"`
+
+	ImageRelated *ImageRelated `gorm:"polymorphic:Entity;polymorphicValue:category"`
+	Products     *[]Product    `gorm:"foreignKey:CategoryID"`
+
+	CreatedAt time.Time      `gorm:"not null;default:CURRENT_TIMESTAMP"`
+	UpdatedAt time.Time      `gorm:"not null;default:CURRENT_TIMESTAMP;autoUpdateTime"`
+	DeletedAt gorm.DeletedAt `gorm:"index"`
+}
+
+func MapCategoryToModel(category *entity.Category) *Category {
+
+	return &Category{
+		ID:          category.ID,
+		Name:        category.Name,
+		Description: category.Description,
+		ImageRelated: &ImageRelated{
+			ImageID:    category.Image.ID,
+			EntityID:   category.ID,
+			EntityType: EntityTypeCategory,
+			Order:      0,
+		},
+		CreatedAt: category.CreatedAt,
+		UpdatedAt: category.UpdatedAt,
+	}
+}
+
+func (c *Category) ToDomain(imageModel *Image) *entity.Category {
+	var image entity.Image
+	if imageModel != nil {
+		image = entity.Image{
+			ID:   c.ImageRelated.ImageID,
+			Path: imageModel.Path,
+		}
+	}
+	return &entity.Category{
+		ID:          c.ID,
+		Name:        c.Name,
+		Description: c.Description,
+		Image:       image,
+		CreatedAt:   c.CreatedAt,
+		UpdatedAt:   c.UpdatedAt,
+	}
 }

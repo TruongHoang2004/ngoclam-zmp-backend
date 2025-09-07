@@ -1,34 +1,23 @@
 package database
 
 import (
-	"ngoclam-zmp-be/internal/infrastructure/persistence/model"
+	"fmt"
+	"log"
 
+	"github.com/TruongHoang2004/ngoclam-zmp-backend/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-var db *gorm.DB
+func NewDatabase(config *config.Config) (*gorm.DB, error) {
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		config.DBHost, config.DBUser, config.DBPassword, config.DBName, config.DBPort)
 
-func InitDB() {
-	dsn := "host=localhost user=postgres password=truonghoang2004 dbname=ngoclam port=5432 sslmode=disable TimeZone=Asia/Ho_Chi_Minh"
-	var err error
-	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic("Failed to connect to database!")
+		return nil, fmt.Errorf("failed to connect database: %w", err)
 	}
 
-	// Auto Migrate
-	db.AutoMigrate(&model.Category{}, &model.Product{}, &model.Image{})
-}
-
-func GetDB() *gorm.DB {
-	return db
-}
-
-func CloseDB() error {
-	sqlDB, err := db.DB()
-	if err != nil {
-		return err
-	}
-	return sqlDB.Close()
+	log.Println("✅ Database connected")
+	return db.Debug(), nil
 }
