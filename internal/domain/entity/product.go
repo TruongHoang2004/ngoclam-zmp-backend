@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"context"
 	"time"
 )
 
@@ -42,10 +43,10 @@ func (p *Product) UpdateInfo(name string, description string, price int64, categ
 }
 
 type ProductRepository interface {
-	Create(product Product) (*Product, error)
-	FindByID(id uint) (*Product, error)
-	FindAll() ([]*Product, error)
-	Update(product Product) (*Product, error)
-	Delete(id uint) error
-	FindByCategoryID(categoryID uint) ([]*Product, error)
+	Create(ctx context.Context, product Product) (*Product, error)
+	FindByID(ctx context.Context, id uint) (*Product, error)
+	FindAll(ctx context.Context) ([]*Product, error)
+	Update(ctx context.Context, product Product) (*Product, error)
+	Delete(ctx context.Context, id uint) error
+	FindByCategoryID(ctx context.Context, categoryID uint) ([]*Product, error)
 }

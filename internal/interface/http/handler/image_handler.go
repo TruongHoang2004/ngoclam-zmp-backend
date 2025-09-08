@@ -45,7 +45,7 @@ func (h *ImageHandler) UploadImage(ctx *gin.Context) {
 		return
 	}
 
-	image, err := h.imageService.UploadImage(file)
+	image, err := h.imageService.UploadImage(ctx, file)
 	if err != nil {
 		application.HandleError(ctx, err)
 		return
@@ -80,7 +80,7 @@ func (h *ImageHandler) GetImage(ctx *gin.Context) {
 		return
 	}
 
-	image, err := h.imageService.GetImageByID(id)
+	image, err := h.imageService.GetImageByID(ctx, id)
 	if err != nil {
 		application.HandleError(ctx, err)
 		return
@@ -106,7 +106,7 @@ func (h *ImageHandler) DeleteImage(ctx *gin.Context) {
 		return
 	}
 
-	if err := h.imageService.DeleteImage(id); err != nil {
+	if err := h.imageService.DeleteImage(ctx, id); err != nil {
 		application.HandleError(ctx, err)
 		return
 	}
@@ -122,7 +122,7 @@ func (h *ImageHandler) DeleteImage(ctx *gin.Context) {
 // @Success 200 {array} map[string]interface{} "Returns list of images"
 // @Router /images [get]
 func (h *ImageHandler) ListImages(ctx *gin.Context) {
-	images, err := h.imageService.ListImages()
+	images, err := h.imageService.ListImages(ctx)
 	if err != nil {
 		application.HandleError(ctx, err)
 		return

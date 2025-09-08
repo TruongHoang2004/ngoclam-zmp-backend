@@ -1,13 +1,17 @@
 package entity
 
 import (
+	"context"
 	"mime/multipart"
 )
 
 // Image represents an image associated with a product
 type Image struct {
-	ID   uint   `json:"id" `  // Unique identifier for the image
-	Path string `json:"path"` // URL path to the image
+	ID       uint   `json:"id"`       // Unique identifier for the image
+	Path     string `json:"path"`     // URL path to the image
+	URL      string `json:"url"`      // URL to access the image
+	IKFileID string `json:"ikFileId"` // ImageKit file ID
+	Hash     string `json:"hash"`     // Hash of the image
 }
 
 // NewImage creates a new Image entity
@@ -19,8 +23,8 @@ func NewImage(imagePath string, isPrimary bool) *Image {
 }
 
 type ImageRepository interface {
-	SaveFile(file *multipart.FileHeader) (*Image, error)
-	FindByID(id uint) (*Image, error)
-	FindAll() ([]*Image, error)
-	Delete(id uint) error
+	SaveFile(ctx context.Context, file *multipart.FileHeader) (*Image, error)
+	FindByID(ctx context.Context, id uint) (*Image, error)
+	FindAll(ctx context.Context) ([]*Image, error)
+	Delete(ctx context.Context, id uint) error
 }

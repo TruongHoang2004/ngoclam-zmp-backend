@@ -1,6 +1,10 @@
 package application
 
-import "github.com/TruongHoang2004/ngoclam-zmp-backend/internal/domain/entity"
+import (
+	"context"
+
+	"github.com/TruongHoang2004/ngoclam-zmp-backend/internal/domain/entity"
+)
 
 type ProductService struct {
 	ProductRepository entity.ProductRepository
@@ -12,26 +16,26 @@ func NewProductService(productRepo entity.ProductRepository) *ProductService {
 	}
 }
 
-func (s *ProductService) CreateProduct(product entity.Product) (*entity.Product, error) {
-	return s.ProductRepository.Create(product)
+func (s *ProductService) CreateProduct(ctx context.Context, product entity.Product) (*entity.Product, error) {
+	return s.ProductRepository.Create(ctx, product)
 }
 
-func (s *ProductService) GetProductByID(id uint) (*entity.Product, error) {
-	return s.ProductRepository.FindByID(id)
+func (s *ProductService) GetProductByID(ctx context.Context, id uint) (*entity.Product, error) {
+	return s.ProductRepository.FindByID(ctx, id)
 }
 
-func (s *ProductService) GetAllProducts() ([]*entity.Product, error) {
-	return s.ProductRepository.FindAll()
+func (s *ProductService) GetAllProducts(ctx context.Context) ([]*entity.Product, error) {
+	return s.ProductRepository.FindAll(ctx)
 }
 
-func (s *ProductService) UpdateProduct(product entity.Product) (*entity.Product, error) {
-	return s.ProductRepository.Update(product)
+func (s *ProductService) UpdateProduct(ctx context.Context, product entity.Product) (*entity.Product, error) {
+	return s.ProductRepository.Update(ctx, product)
 }
 
-func (s *ProductService) DeleteProduct(id uint) error {
-	return s.ProductRepository.Delete(id)
+func (s *ProductService) DeleteProduct(ctx context.Context, id uint) error {
+	return s.ProductRepository.Delete(ctx, id)
 }
 
-func (s *ProductService) GetProductsByCategoryID(categoryID uint) ([]*entity.Product, error) {
-	return s.ProductRepository.FindByCategoryID(categoryID)
+func (s *ProductService) GetProductsByCategoryID(ctx context.Context, categoryID uint) ([]*entity.Product, error) {
+	return s.ProductRepository.FindByCategoryID(ctx, categoryID)
 }

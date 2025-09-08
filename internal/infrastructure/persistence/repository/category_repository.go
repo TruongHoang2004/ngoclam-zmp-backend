@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"context"
+
 	"github.com/TruongHoang2004/ngoclam-zmp-backend/internal/domain/entity"
 	"github.com/TruongHoang2004/ngoclam-zmp-backend/internal/infrastructure/persistence/model"
 	"gorm.io/gorm"
@@ -15,10 +17,10 @@ func NewCategoryRepository(db *gorm.DB) entity.CategoryRepository {
 	return &CategoryRepositoryImpl{db: db}
 }
 
-func (c *CategoryRepositoryImpl) Create(category *entity.Category) (*entity.Category, error) {
+func (c *CategoryRepositoryImpl) Create(ctx context.Context, category *entity.Category) (*entity.Category, error) {
 	categoryModel := model.MapCategoryToModel(category)
 
-	tx := c.db.Begin()
+	tx := c.db.WithContext(ctx).Begin()
 	defer func() {
 		if r := recover(); r != nil {
 			tx.Rollback()
@@ -61,9 +63,9 @@ func (c *CategoryRepositoryImpl) Create(category *entity.Category) (*entity.Cate
 }
 
 // FindByID returns category by ID with optional image
-func (c *CategoryRepositoryImpl) FindByID(id uint) (*entity.Category, error) {
+func (c *CategoryRepositoryImpl) FindByID(ctx context.Context, id uint) (*entity.Category, error) {
 	var categoryModel model.Category
-	if err := c.db.Preload("ImageRelated").First(&categoryModel, id).Error; err != nil {
+	if err := c.db.WithContext(ctx).Preload("ImageRelated").First(&categoryModel, id).Error; err != nil {
 		return nil, err
 	}
 
@@ -80,9 +82,9 @@ func (c *CategoryRepositoryImpl) FindByID(id uint) (*entity.Category, error) {
 }
 
 // FindAll returns all categories with optional images
-func (c *CategoryRepositoryImpl) FindAll() ([]*entity.Category, error) {
+func (c *CategoryRepositoryImpl) FindAll(ctx context.Context) ([]*entity.Category, error) {
 	var categoryModels []model.Category
-	if err := c.db.Preload("ImageRelated").Find(&categoryModels).Error; err != nil {
+	if err := c.db.WithContext(ctx).Preload("ImageRelated").Find(&categoryModels).Error; err != nil {
 		return nil, err
 	}
 
@@ -101,13 +103,13 @@ func (c *CategoryRepositoryImpl) FindAll() ([]*entity.Category, error) {
 }
 
 // Update modifies an existing category
-func (c *CategoryRepositoryImpl) Update(category *entity.Category) error {
+func (c *CategoryRepositoryImpl) Update(ctx context.Context, category *entity.Category) error {
 	categoryModel := model.MapCategoryToModel(category)
 
-	return c.db.Save(categoryModel).Error
+	return c.db.WithContext(ctx).Save(categoryModel).Error
 }
 
 // Delete removes a category by ID
-func (c *CategoryRepositoryImpl) Delete(id uint) error {
-	return c.db.Delete(&model.Category{}, id).Error
+func (c *CategoryRepositoryImpl) Delete(ctx context.Context, id uint) error {
+	return c.db.WithContext(ctx).Delete(&model.Category{}, id).Error
 }

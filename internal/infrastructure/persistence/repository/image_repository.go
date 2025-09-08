@@ -1,18 +1,17 @@
 package repository
 
 import (
-	"crypto/rand"
+	"context"
 	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
 	"mime"
 	"mime/multipart"
 	"net/http"
-	"os"
-	"path/filepath"
 
+	"github.com/imagekit-developer/imagekit-go"
+	"github.com/imagekit-developer/imagekit-go/api/uploader"
 	"gorm.io/gorm"
 
 	"github.com/TruongHoang2004/ngoclam-zmp-backend/config"
@@ -21,32 +20,33 @@ import (
 )
 
 type ImageRepositoryImpl struct {
-	db       *gorm.DB
-	basePath string // ví dụ: "./uploads"
+	db *gorm.DB
+	ik *imagekit.ImageKit
 }
 
-func NewImageRepository(db *gorm.DB, config *config.Config) entity.ImageRepository {
-	// đảm bảo thư mục tồn tại
-	_ = os.MkdirAll(config.BasePath, 0755)
-	return &ImageRepositoryImpl{db: db, basePath: config.BasePath}
+func NewImageRepository(db *gorm.DB, cfg *config.Config) entity.ImageRepository {
+	ik := imagekit.NewFromParams(imagekit.NewParams{
+		PrivateKey:  cfg.ImageKitPrivateKey,
+		PublicKey:   cfg.ImageKitPublicKey,
+		UrlEndpoint: cfg.ImageKitEndpoint,
+	})
+
+	return &ImageRepositoryImpl{db: db, ik: ik}
 }
 
-// --- CRUD Image ---
-
-// SaveFile lưu file upload vào thư mục uploads và insert record
-func (r *ImageRepositoryImpl) SaveFile(file *multipart.FileHeader) (*entity.Image, error) {
+// SaveFile upload file lên ImageKit và insert DB record
+func (r *ImageRepositoryImpl) SaveFile(ctx context.Context, file *multipart.FileHeader) (*entity.Image, error) {
 	src, err := file.Open()
 	if err != nil {
 		return nil, fmt.Errorf("cannot open file: %w", err)
 	}
 	defer src.Close()
 
-	// đọc vài byte đầu để detect content-type
+	// detect content-type
 	buf := make([]byte, 512)
 	n, _ := src.Read(buf)
 	ct := http.DetectContentType(buf[:n])
 
-	// chỉ cho phép các loại file ảnh
 	allowed := map[string]bool{
 		"image/jpeg":    true,
 		"image/png":     true,
@@ -58,80 +58,72 @@ func (r *ImageRepositoryImpl) SaveFile(file *multipart.FileHeader) (*entity.Imag
 		return nil, fmt.Errorf("unsupported content type: %s", ct)
 	}
 
-	// reset về đầu
+	// reset về đầu để hash
 	if _, err := src.Seek(0, io.SeekStart); err != nil {
-		return nil, fmt.Errorf("seek error: %w", err)
+		return nil, err
 	}
-
 	hash := sha256.New()
 	if _, err := io.Copy(hash, src); err != nil {
-		return nil, fmt.Errorf("cannot compute hash: %w", err)
+		return nil, err
 	}
 	fileHash := fmt.Sprintf("%x", hash.Sum(nil))
-	log.Printf("File hash: %s", fileHash)
 
-	// kiểm tra trùng lặp
+	// kiểm tra trùng lặp trong DB
 	var existing model.Image
-	if err := r.db.Where("hash = ?", fileHash).First(&existing).Error; err == nil {
-		// đã tồn tại file giống hệt
+	if err := r.db.WithContext(ctx).Where("hash = ?", fileHash).First(&existing).Error; err == nil {
 		return existing.ToDomain(), nil
 	} else if err != gorm.ErrRecordNotFound {
-		return nil, fmt.Errorf("database error: %w", err)
-	}
-
-	// reset về đầu
-	if _, err := src.Seek(0, io.SeekStart); err != nil {
-		return nil, fmt.Errorf("seek error: %w", err)
-	}
-
-	// tạo tên file ngẫu nhiên
-	random := make([]byte, 16)
-	_, _ = rand.Read(random)
-	exts, _ := mime.ExtensionsByType(ct)
-	ext := ".bin"
-	if len(exts) > 0 {
-		ext = exts[0]
-	}
-	filename := hex.EncodeToString(random) + ext
-	dstPath := filepath.Join(r.basePath, filename)
-
-	// ghi file xuống uploads/
-	dst, err := os.Create(dstPath)
-	if err != nil {
-		return nil, fmt.Errorf("cannot create file: %w", err)
-	}
-	defer dst.Close()
-
-	if _, err := io.Copy(dst, src); err != nil {
-		return nil, fmt.Errorf("cannot save file: %w", err)
-	}
-
-	// insert DB record
-	image := &model.Image{
-		Path: filename,
-		Hash: fileHash,
-	}
-	if err := r.db.Create(image).Error; err != nil {
-		// rollback: xoá file nếu DB fail
-		_ = os.Remove(dstPath)
 		return nil, err
 	}
 
-	return image.ToDomain(), nil
-}
+	// reset về đầu để upload
+	if _, err := src.Seek(0, io.SeekStart); err != nil {
+		return nil, err
+	}
 
-func (r *ImageRepositoryImpl) FindByID(id uint) (*entity.Image, error) {
-	var img model.Image
-	if err := r.db.First(&img, id).Error; err != nil {
+	// thêm extension nếu file không có
+	exts, _ := mime.ExtensionsByType(ct)
+	filename := file.Filename
+	if len(exts) > 0 && filepathExt(filename) == "" {
+		filename += exts[0]
+	}
+
+	// upload lên ImageKit bằng io.Reader
+	trueValue := true
+	uploadRes, err := r.ik.Uploader.Upload(ctx, src, uploader.UploadParam{
+		FileName:          filename,
+		UseUniqueFileName: &trueValue,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("upload to imagekit failed: %w", err)
+	}
+
+	// lưu metadata vào DB
+	img := &model.Image{
+		URL:      uploadRes.Data.Url,    // URL public của ảnh
+		Hash:     fileHash,              // checksum để chống trùng
+		IKFileID: uploadRes.Data.FileId, // để xóa ảnh sau này
+	}
+	if err := r.db.WithContext(ctx).Create(img).Error; err != nil {
+		// rollback: xóa trên imagekit nếu DB fail
+		_, _ = r.ik.Media.DeleteFile(context.Background(), uploadRes.Data.FileId)
 		return nil, err
 	}
 
 	return img.ToDomain(), nil
 }
 
-func (r *ImageRepositoryImpl) FindAll() ([]*entity.Image, error) {
+func (r *ImageRepositoryImpl) FindByID(ctx context.Context, id uint) (*entity.Image, error) {
+	var img model.Image
+	if err := r.db.WithContext(ctx).First(&img, id).Error; err != nil {
+		return nil, err
+	}
+	return img.ToDomain(), nil
+}
+
+func (r *ImageRepositoryImpl) FindAll(ctx context.Context) ([]*entity.Image, error) {
 	var imgs []model.Image
-	if err := r.db.Find(&imgs).Error; err != nil {
+	if err := r.db.WithContext(ctx).Find(&imgs).Error; err != nil {
 		return nil, err
 	}
 	result := make([]*entity.Image, len(imgs))
@@ -141,17 +133,29 @@ func (r *ImageRepositoryImpl) FindAll() ([]*entity.Image, error) {
 	return result, nil
 }
 
-func (r *ImageRepositoryImpl) Delete(id uint) error {
+func (r *ImageRepositoryImpl) Delete(ctx context.Context, id uint) error {
 	var img model.Image
-	if err := r.db.First(&img, id).Error; err != nil {
+	if err := r.db.WithContext(ctx).First(&img, id).Error; err != nil {
 		return err
 	}
-	filePath := filepath.Join(r.basePath, img.Path)
 
-	if err := r.db.Delete(&img).Error; err != nil {
-		return err
+	// xóa trên ImageKit
+	if img.IKFileID != "" {
+		_, err := r.ik.Media.DeleteFile(ctx, img.IKFileID)
+		if err != nil {
+			log.Printf("warn: failed to delete imagekit file %s: %v", img.IKFileID, err)
+		}
 	}
-	// xoá file luôn
-	_ = os.Remove(filePath)
-	return nil
+
+	return r.db.Delete(&img).Error
+}
+
+// helper để lấy extension từ filename
+func filepathExt(name string) string {
+	for i := len(name) - 1; i >= 0; i-- {
+		if name[i] == '.' {
+			return name[i:]
+		}
+	}
+	return ""
 }

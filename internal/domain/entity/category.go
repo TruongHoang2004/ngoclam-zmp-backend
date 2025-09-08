@@ -1,6 +1,9 @@
 package entity
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // Category represents a product category in the domain
 type Category struct {
@@ -15,11 +18,11 @@ type Category struct {
 }
 
 type CategoryRepository interface {
-	Create(category *Category) (*Category, error)
-	FindByID(id uint) (*Category, error)
-	FindAll() ([]*Category, error)
-	Update(category *Category) error
-	Delete(id uint) error
+	Create(ctx context.Context, category *Category) (*Category, error)
+	FindByID(ctx context.Context, id uint) (*Category, error)
+	FindAll(ctx context.Context) ([]*Category, error)
+	Update(ctx context.Context, category *Category) error
+	Delete(ctx context.Context, id uint) error
 }
 
 // NewCategory creates a new category instance

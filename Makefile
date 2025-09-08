@@ -1,16 +1,21 @@
 APP_NAME=ngoclam-zmp-be
 MAIN_FILE=cmd/main.go
 
+
+
 # Lệnh generate swagger docs
 swag:
 	swag init -g $(MAIN_FILE) -o docs
 
+dev: swag
+	go run -mod=mod -tags=dev $(MAIN_FILE)
+
 # Build binary
-build: swag
+build: 
 	go build -o bin/$(APP_NAME) $(MAIN_FILE)
 
 # Run trực tiếp
-run: swag
+run: 
 	go run $(MAIN_FILE)
 
 diff:

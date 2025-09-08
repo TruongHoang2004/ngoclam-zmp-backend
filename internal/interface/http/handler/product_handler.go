@@ -36,22 +36,22 @@ func (h *ProductHandler) RegisterRoutes(r *gin.RouterGroup) {
 // @Param product body dto.CreateProductRequest true "Product to create"
 // @Success 200 {object} dto.ProductResponseDTO "Returns the created product"
 // @Router /products [post]
-func (h *ProductHandler) CreateProduct(c *gin.Context) {
+func (h *ProductHandler) CreateProduct(ctx *gin.Context) {
 	var createProductRequest dto.CreateProductRequest
 
 	// Validate the request
-	if err := c.ShouldBindJSON(&createProductRequest); err != nil {
-		application.HandleError(c, err)
+	if err := ctx.ShouldBindJSON(&createProductRequest); err != nil {
+		application.HandleError(ctx, err)
 		return
 	}
 
-	product, err := h.ProductService.CreateProduct(*createProductRequest.ToDomain())
+	product, err := h.ProductService.CreateProduct(ctx, *createProductRequest.ToDomain())
 	if err != nil {
-		application.HandleError(c, err)
+		application.HandleError(ctx, err)
 		return
 	}
 
-	c.JSON(200, dto.NewProductResponseDTO(*product))
+	ctx.JSON(200, dto.NewProductResponseDTO(*product))
 }
 
 // @Summary Get a product by ID
@@ -62,20 +62,20 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 // @Param id path int true "Product ID"
 // @Success 200 {object} dto.ProductResponseDTO "Returns the product"
 // @Router /products/{id} [get]
-func (h *ProductHandler) GetProductByID(c *gin.Context) {
-	id, err := ConvertStringToUint(c.Param("id"))
+func (h *ProductHandler) GetProductByID(ctx *gin.Context) {
+	id, err := ConvertStringToUint(ctx.Param("id"))
 	if err != nil {
-		application.HandleError(c, err)
+		application.HandleError(ctx, err)
 		return
 	}
 
-	product, err := h.ProductService.GetProductByID(id)
+	product, err := h.ProductService.GetProductByID(ctx, id)
 	if err != nil {
-		application.HandleError(c, err)
+		application.HandleError(ctx, err)
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Product retrieved successfully", "product": dto.NewProductResponseDTO(*product)})
+	ctx.JSON(200, gin.H{"message": "Product retrieved successfully", "product": dto.NewProductResponseDTO(*product)})
 }
 
 // @Summary Get all products
@@ -85,10 +85,10 @@ func (h *ProductHandler) GetProductByID(c *gin.Context) {
 // @Produce json
 // @Success 200 {array} dto.ProductResponseDTO "Returns the list of products"
 // @Router /products [get]
-func (h *ProductHandler) GetAllProducts(c *gin.Context) {
-	products, err := h.ProductService.GetAllProducts()
+func (h *ProductHandler) GetAllProducts(ctx *gin.Context) {
+	products, err := h.ProductService.GetAllProducts(ctx)
 	if err != nil {
-		application.HandleError(c, err)
+		application.HandleError(ctx, err)
 		return
 	}
 
@@ -97,7 +97,7 @@ func (h *ProductHandler) GetAllProducts(c *gin.Context) {
 		productDTOs = append(productDTOs, dto.NewProductResponseDTO(*p))
 	}
 
-	c.JSON(200, gin.H{"message": "Products retrieved successfully", "products": productDTOs})
+	ctx.JSON(200, gin.H{"message": "Products retrieved successfully", "products": productDTOs})
 }
 
 // @Summary Update a product
@@ -109,21 +109,21 @@ func (h *ProductHandler) GetAllProducts(c *gin.Context) {
 // @Param product body dto.UpdateProductRequest true "Product to update"
 // @Success 200 {object} dto.ProductResponseDTO "Returns the updated product"
 // @Router /products/{id} [put]
-func (h *ProductHandler) UpdateProduct(c *gin.Context) {
+func (h *ProductHandler) UpdateProduct(ctx *gin.Context) {
 
 	var updateProductRequest dto.UpdateProductRequest
-	if err := c.ShouldBindJSON(&updateProductRequest); err != nil {
-		application.HandleError(c, err)
+	if err := ctx.ShouldBindJSON(&updateProductRequest); err != nil {
+		application.HandleError(ctx, err)
 		return
 	}
 
-	product, err := h.ProductService.UpdateProduct(*updateProductRequest.ToDomain())
+	product, err := h.ProductService.UpdateProduct(ctx.Request.Context(), *updateProductRequest.ToDomain())
 	if err != nil {
-		application.HandleError(c, err)
+		application.HandleError(ctx, err)
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Product updated successfully", "product": dto.NewProductResponseDTO(*product)})
+	ctx.JSON(200, gin.H{"message": "Product updated successfully", "product": dto.NewProductResponseDTO(*product)})
 }
 
 // @Summary Delete a product
@@ -134,20 +134,20 @@ func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 // @Param id path int true "Product ID"
 // @Success 200 {object} map[string]string "Returns a success message"
 // @Router /products/{id} [delete]
-func (h *ProductHandler) DeleteProduct(c *gin.Context) {
-	id, err := ConvertStringToUint(c.Param("id"))
+func (h *ProductHandler) DeleteProduct(ctx *gin.Context) {
+	id, err := ConvertStringToUint(ctx.Param("id"))
 	if err != nil {
-		application.HandleError(c, err)
+		application.HandleError(ctx, err)
 		return
 	}
 
-	err = h.ProductService.DeleteProduct(id)
+	err = h.ProductService.DeleteProduct(ctx.Request.Context(), id)
 	if err != nil {
-		application.HandleError(c, err)
+		application.HandleError(ctx, err)
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Product deleted successfully"})
+	ctx.JSON(200, gin.H{"message": "Product deleted successfully"})
 }
 
 // @Summary Get products by category ID
@@ -158,16 +158,16 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 // @Param category_id path int true "Category ID"
 // @Success 200 {array} dto.ProductResponseDTO "Returns the list of products in the category"
 // @Router /products/category/{category_id} [get]
-func (h *ProductHandler) GetProductsByCategoryID(c *gin.Context) {
-	categoryID, err := ConvertStringToUint(c.Param("category_id"))
+func (h *ProductHandler) GetProductsByCategoryID(ctx *gin.Context) {
+	categoryID, err := ConvertStringToUint(ctx.Param("category_id"))
 	if err != nil {
-		application.HandleError(c, err)
+		application.HandleError(ctx, err)
 		return
 	}
 
-	products, err := h.ProductService.GetProductsByCategoryID(categoryID)
+	products, err := h.ProductService.GetProductsByCategoryID(ctx.Request.Context(), categoryID)
 	if err != nil {
-		application.HandleError(c, err)
+		application.HandleError(ctx, err)
 		return
 	}
 
@@ -176,5 +176,5 @@ func (h *ProductHandler) GetProductsByCategoryID(c *gin.Context) {
 		productDTOs = append(productDTOs, dto.NewProductResponseDTO(*p))
 	}
 
-	c.JSON(200, gin.H{"message": "Products retrieved successfully", "products": productDTOs})
+	ctx.JSON(200, gin.H{"message": "Products retrieved successfully", "products": productDTOs})
 }

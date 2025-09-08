@@ -44,7 +44,7 @@ func (h *CategoryHandler) CreateCategory(ctx *gin.Context) {
 		return
 	}
 
-	category, err := h.categoryService.CreateCategory(createCategoryRequest.ToDomain())
+	category, err := h.categoryService.CreateCategory(ctx, createCategoryRequest.ToDomain())
 	if err != nil {
 		application.HandleError(ctx, err)
 		return
@@ -71,7 +71,7 @@ func (h *CategoryHandler) FindCategoryByID(ctx *gin.Context) {
 		return
 	}
 
-	category, err := h.categoryService.GetCategoryByID(id)
+	category, err := h.categoryService.GetCategoryByID(ctx, id)
 	if err != nil {
 		application.HandleError(ctx, err)
 		return
@@ -89,7 +89,7 @@ func (h *CategoryHandler) FindCategoryByID(ctx *gin.Context) {
 // @Success 200 {object} map[string]interface{} "Returns a list of categories"
 // @Router /categories [get]
 func (h *CategoryHandler) FindAllCategories(ctx *gin.Context) {
-	categories, err := h.categoryService.GetAllCategories()
+	categories, err := h.categoryService.GetAllCategories(ctx)
 	if err != nil {
 		application.HandleError(ctx, err)
 		return
