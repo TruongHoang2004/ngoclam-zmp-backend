@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   db:
     image: postgres:16-alpine
@@ -33,15 +35,49 @@ services:
         condition: service_healthy
 
   app:
-    iamge: truonghx/ngoclam-be:latest
+    image: truonghx/ngoclam-be:latest
     container_name: zmp-be
     restart: unless-stopped
-    ports:
-      - "8080:8080"
-    depends_on:
-      - migrate
+    expose:
+      - "8080"
     env_file:
       - .env
+    depends_on:
+      - migrate
+    environment:
+      - VIRTUAL_HOST=api.nhavuonngoclam.com
+      - LETSENCRYPT_HOST=api.nhavuonngoclam.com
+      - LETSENCRYPT_EMAIL=xuantruong.tn.1712@gmail.com
+
+  nginx-proxy:
+    image: jwilder/nginx-proxy:alpine
+    container_name: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - certs:/etc/nginx/certs:ro
+      - vhost.d:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+
+  acme-companion:
+    image: nginxproxy/acme-companion
+    container_name: nginx-proxy-acme
+    restart: unless-stopped
+    depends_on:
+      - nginx-proxy
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - certs:/etc/nginx/certs
+      - acme:/etc/acme.sh
 
 volumes:
   postgres_data:
+  certs:
+  vhost.d:
+  html:
+  acme:
