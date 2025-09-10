@@ -33,7 +33,7 @@ services:
         condition: service_healthy
 
   app:
-    build: .
+    iamge: truonghx/ngoclam-be:latest
     container_name: zmp-be
     restart: unless-stopped
     ports:
