@@ -1,5 +1,6 @@
 APP_NAME=ngoclam-zmp-be
 MAIN_FILE=cmd/main.go
+APP_FILE=bin/ngoclam-zmp-be
 
 
 
@@ -16,7 +17,7 @@ build:
 
 # Run trực tiếp
 run: 
-	go run $(MAIN_FILE)
+	./$(APP_FILE)
 
 diff:
 	@read -p "Enter migration name: " name; \

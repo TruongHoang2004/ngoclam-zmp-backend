@@ -8,11 +8,7 @@ import (
 )
 
 type Config struct {
-	DBHost             string
-	DBPort             string
-	DBUser             string
-	DBPassword         string
-	DBName             string
+	DBUrl              string
 	AppPort            string
 	BasePath           string
 	ImageKitPrivateKey string
@@ -25,11 +21,7 @@ var AppConfig *Config
 func InitConfig() *Config {
 	LoadEnv()
 	AppConfig = &Config{
-		DBHost:             getEnv("DB_HOST", "localhost"),
-		DBPort:             getEnv("DB_PORT", "5432"),
-		DBUser:             getEnv("DB_USER", "postgres"),
-		DBPassword:         getEnv("DB_PASSWORD", "password"),
-		DBName:             getEnv("DB_NAME", "ngoclam"),
+		DBUrl:              getEnv("DB_URL", ""),
 		AppPort:            getEnv("APP_PORT", "8080"),
 		BasePath:           getEnv("BASE_PATH", "./uploads"),
 		ImageKitPrivateKey: getEnv("IMAGEKIT_PRIVATE_KEY", ""),
