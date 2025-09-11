@@ -14,6 +14,7 @@ type Config struct {
 	ImageKitPrivateKey string
 	ImageKitPublicKey  string
 	ImageKitEndpoint   string
+	ZaloMiniAppHost    string
 }
 
 var AppConfig *Config
@@ -27,6 +28,7 @@ func InitConfig() *Config {
 		ImageKitPrivateKey: getEnv("IMAGEKIT_PRIVATE_KEY", ""),
 		ImageKitPublicKey:  getEnv("IMAGEKIT_PUBLIC_KEY", ""),
 		ImageKitEndpoint:   getEnv("IMAGEKIT_ENDPOINT_URL", ""),
+		ZaloMiniAppHost:    getEnv("ZALO_MINIAPP_HOST", ""),
 	}
 
 	return AppConfig
