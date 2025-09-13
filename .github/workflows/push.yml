@@ -40,6 +40,7 @@ jobs:
           script: |
             cd ~/ngoclam-zmp-backend/
             git pull
+            sed -i "s|truonghx/ngoclam-be:.*|truonghx/ngoclam-be:${{ github.sha }}|" docker-compose.deploy.yml
             docker compose -f docker-compose.deploy.yml pull app
-            docker compose -f docker-compose.deploy.yml up -d app
+            docker compose -f docker-compose.deploy.yml up -d --force-recreate app
             docker image prune -f
