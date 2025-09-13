@@ -20,8 +20,6 @@ func RegisterRoutes(r *gin.Engine, config *Config) {
 		MaxAge:          12 * time.Hour,
 	}))
 
-	r.Static("/uploads", "./uploads")
-
 	api := r.Group("/api")
 	{
 		api.GET("/ping", func(c *gin.Context) {
