@@ -42,3 +42,4 @@ jobs:
             git pull
             docker compose -f docker-compose.deploy.yml pull app
             docker compose -f docker-compose.deploy.yml up -d app
+            docker image prune -f
