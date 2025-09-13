@@ -29,10 +29,10 @@ type UpdateCategoryRequest struct {
 }
 
 type CategoryResponse struct {
-	ID          uint           `json:"id"`
-	Name        string         `json:"name"`
-	Description string         `json:"description"`
-	Image       *ImageResponse `json:"image,omitempty"`
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Image       string `json:"image"` // URL of the image
 }
 
 func NewCategoryResponse(category entity.Category) CategoryResponse {
@@ -40,6 +40,7 @@ func NewCategoryResponse(category entity.Category) CategoryResponse {
 		ID:          category.ID,
 		Name:        category.Name,
 		Description: category.Description,
-		Image:       NewImageResponse(&category.Image),
+		// Image:       category.Image.URL,
+		Image: "https://nhavuonngoclam.com/wp-content/uploads/2021/02/Nho-than-go.jpg",
 	}
 }

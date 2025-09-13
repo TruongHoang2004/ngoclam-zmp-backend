@@ -95,7 +95,12 @@ func (h *CategoryHandler) FindAllCategories(ctx *gin.Context) {
 		return
 	}
 
+	respone := make([]dto.CategoryResponse, 0, len(categories))
+	for _, category := range categories {
+		respone = append(respone, dto.NewCategoryResponse(*category))
+	}
+
 	ctx.JSON(200, gin.H{
-		"data": categories,
+		"data": respone,
 	})
 }
