@@ -13,12 +13,11 @@ import (
 func RegisterRoutes(r *gin.Engine, config *Config) {
 
 	r.Use(cors.New(cors.Config{
-		AllowAllOrigins:  true,
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"*"},
-		ExposeHeaders:    []string{"*"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
+		AllowAllOrigins: true,
+		AllowMethods:    []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:    []string{"*"},
+		ExposeHeaders:   []string{"*"},
+		MaxAge:          12 * time.Hour,
 	}))
 
 	r.Static("/uploads", "./uploads")

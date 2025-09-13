@@ -39,5 +39,6 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
             cd ~/ngoclam-zmp-backend/
+            git pull
             docker compose -f docker-compose.deploy.yml pull app
             docker compose -f docker-compose.deploy.yml up -d app
