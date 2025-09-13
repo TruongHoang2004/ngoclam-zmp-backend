@@ -21,10 +21,10 @@ func (h *ImageHandler) RegisterRoutes(g *gin.RouterGroup) {
 	// Register image-related routes here
 	image := g.Group("/images")
 	{
-		image.POST("/", h.UploadImage)
+		image.POST("", h.UploadImage)
 		image.GET("/:id", h.GetImage)
 		image.DELETE("/:id", h.DeleteImage)
-		image.GET("/", h.ListImages)
+		image.GET("", h.ListImages)
 	}
 }
 

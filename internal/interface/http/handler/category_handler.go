@@ -21,8 +21,8 @@ func NewCategoryHandler(categoryService *application.CategoryService) *CategoryH
 func (h *CategoryHandler) RegisterRoutes(r *gin.RouterGroup) {
 	category := r.Group("/categories")
 	{
-		category.GET("/", h.FindAllCategories)
-		category.POST("/", h.CreateCategory)
+		category.GET("", h.FindAllCategories)
+		category.POST("", h.CreateCategory)
 		category.GET("/:id", h.FindCategoryByID)
 	}
 }

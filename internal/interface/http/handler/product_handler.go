@@ -19,9 +19,9 @@ func NewProductHandler(productService *application.ProductService) *ProductHandl
 func (h *ProductHandler) RegisterRoutes(r *gin.RouterGroup) {
 	products := r.Group("/products")
 	{
-		products.POST("/", h.CreateProduct)
+		products.POST("", h.CreateProduct)
 		products.GET("/:id", h.GetProductByID)
-		products.GET("/", h.GetAllProducts)
+		products.GET("", h.GetAllProducts)
 		products.PUT("/:id", h.UpdateProduct)
 		products.DELETE("/:id", h.DeleteProduct)
 		products.GET("/category/:category_id", h.GetProductsByCategoryID)
