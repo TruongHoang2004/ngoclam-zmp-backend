@@ -87,14 +87,14 @@ func (r *UpdateProductRequest) ToDomain() *entity.Product {
 }
 
 type ProductResponseDTO struct {
-	ID          uint             `json:"id"`
-	Name        string           `json:"name"`
-	Description string           `json:"description"`
-	Price       int64            `json:"price"`
-	CategoryID  uint             `json:"category_id"`
-	Category    CategoryResponse `json:"category"`
-	Images      []ImageResponse  `json:"images"`
-	Variants    []VariantDTO     `json:"variants"`
+	ID            uint             `json:"id"`
+	Name          string           `json:"name"`
+	Price         int64            `json:"price"`
+	CategoryID    uint             `json:"category_id"`
+	Category      CategoryResponse `json:"category"`
+	OriginalPrice int64            `json:"original_price"`
+	Image         string           `json:"image"`
+	Detail        string           `json:"detail"`
 }
 
 func NewProductResponseDTO(product entity.Product) ProductResponseDTO {
@@ -107,19 +107,18 @@ func NewProductResponseDTO(product entity.Product) ProductResponseDTO {
 		})
 	}
 
-	var images []ImageResponse
-	for _, img := range product.Images {
-		images = append(images, *NewImageResponse(&img))
+	var imageURL string
+	if len(product.Images) > 0 {
+		imageURL = product.Images[0].URL
 	}
 
 	return ProductResponseDTO{
-		ID:          product.ID,
-		Name:        product.Name,
-		Description: product.Description,
-		Price:       product.Price,
-		CategoryID:  product.CategoryID,
-		Category:    NewCategoryResponse(product.Category),
-		Images:      images,
-		Variants:    variants,
+		ID:            product.ID,
+		CategoryID:    product.CategoryID,
+		Name:          product.Name,
+		Price:         product.Price,
+		OriginalPrice: product.Price, // or set based on your business logic
+		Image:         imageURL,
+		Detail:        product.Description,
 	}
 }
