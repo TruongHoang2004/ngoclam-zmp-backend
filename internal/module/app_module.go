@@ -14,12 +14,7 @@ var ServerModule = fx.Module("http",
 	fx.Provide(func() *gin.Engine {
 		r := gin.Default()
 
-		r.Use(cors.New(cors.Config{
-			AllowOrigins:  []string{"*"}, // cho phép mọi origin
-			AllowMethods:  []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-			AllowHeaders:  []string{"*"}, // cho phép mọi header
-			ExposeHeaders: []string{"*"},
-		}))
+		r.Use(cors.Default())
 
 		return r
 	}),
